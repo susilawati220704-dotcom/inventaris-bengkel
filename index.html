@@ -1,16 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Inventaris Lab TKJ</title>
+    <!-- Menggunakan Bootstrap 5 dari CDN agar tampilan rapi -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
-<body>
-    hello word
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-pc-display-horizontal me-2"></i>Inventaris Barang Lab TKJ
+            </span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <!-- Form Input Barang -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="bi bi-plus-circle me-1"></i> Tambah / Edit Barang
+                    </div>
+                    <div class="card-body">
+                        <form id="formBarang">
+                            <input type="hidden" id="editIndex" value="-1">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Kode Barang</label>
+                                <input type="text" id="kodeBarang" class="form-control" placeholder="Contoh: TKJ-RTR-01" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Nama Barang</label>
+                                <input type="text" id="namaBarang" class="form-control" placeholder="Contoh: Router Mikrotik RB951" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Kategori</label>
+                                <select id="kategoriBarang" class="form-select" required>
+                                    <option value="">-- Pilih Kategori --</option>
+                                    <option value="Perangkat Jaringan">Perangkat Jaringan (Router/Switch/AP)</option>
+                                    <option value="Komputer & Laptop">Komputer & Laptop</option>
+                                    <option value="Kabel & Konektor">Kabel & Konektor (UTP/FO/RJ45)</option>
+                                    <option value="Tools & Alat Kerja">Tools (Crimping/LAN Tester/Splicer)</option>
+                                    <option value="Komponen Hardware">Komponen Hardware (RAM/HDD/PSU)</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Jumlah</label>
+                                    <input type="number" id="jumlahBarang" class="form-control" min="1" value="1" required>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Kondisi</label>
+                                    <select id="kondisiBarang" class="form-select" required>
+                                        <option value="Baik">Baik</option>
+                                        <option value="Rusak Ringan">Rusak Ringan</option>
+                                        <option value="Rusak Berat">Rusak Berat</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Lokasi Penyimpanan</label>
+                                <input type="text" id="lokasiBarang" class="form-control" placeholder="Contoh: Lemari A - Rak 2" required>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary" id="btnSimpan">
+                                    <i class="bi bi-save me-1"></i> Simpan Data
+                                </button>
+                                <button type="button" class="btn btn-secondary d-none" id="btnBatal" onclick="resetForm()">
+                                    Batal Edit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Daftar Barang -->
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold"><i class="bi bi-box-seam me-1"></i> Daftar Barang di Lab</span>
+                        <input type="text" id="cariBarang" class="form-control form-control-sm w-50" placeholder="Cari nama, kode, atau lokasi...">
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama Barang</th>
+                                        <th>Kategori</th>
+                                        <th>Jml</th>
+                                        <th>Kondisi</th>
+                                        <th>Lokasi</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelBarang">
+                                    <!-- Data akan dimuat otomatis oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pesanKosong" class="text-center text-muted my-3 d-none">
+                            Belum ada data barang tersimpan.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menghubungkan ke file JavaScript -->
+    <script src="script.js"></script>
 </body>
-<h1>Inventaris bengkel
-    <p>SMK Negeri 1 Beringin</p>
-</h1>
-<li>1. pembelajaran inventaris</li>
-<li>2. pemahaman inventaris</li>
 </html>
