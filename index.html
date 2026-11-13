@@ -1,127 +1,655 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventaris Lab TKJ</title>
-    <!-- Menggunakan Bootstrap 5 dari CDN agar tampilan rapi -->
+    <title>Sistem Inventaris & Peminjaman - Laboratorium RPL SMK Negeri 1 Beringin</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-light">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
+<body>
+
+    <!-- Header / Navbar -->
+    <nav class="navbar navbar-custom navbar-dark py-3">
         <div class="container">
-            <span class="navbar-brand mb-0 h1">
-                <i class="bi bi-pc-display-horizontal me-2"></i>Inventaris Barang Lab TKJ
-            </span>
+            <div class="d-flex align-items-center">
+                <div class="brand-logo-icon me-3">
+                    <i class="bi bi-code-slash"></i>
+                </div>
+                <div>
+                    <h5 class="text-white mb-0 fw-bold">SMK NEGERI 1 BERINGIN</h5>
+                    <small class="text-white-50">Sistem Inventaris & Peminjaman Alat Laboratorium Rekayasa Perangkat
+                        Lunak (RPL)</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+                <!-- Status Koneksi Database MySQL / phpMyAdmin -->
+                <span id="badgeDbStatus"
+                    class="badge bg-secondary text-white px-3 py-2 fw-medium rounded-pill shadow-sm">
+                    <i class="bi bi-hdd-network me-1"></i> Memeriksa Database...
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="resetKeDataAwal()"
+                    title="Kembalikan data ke contoh percontohan Lab RPL">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Data Contoh RPL
+                </button>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="row">
-            <!-- Form Input Barang -->
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white fw-bold">
-                        <i class="bi bi-plus-circle me-1"></i> Tambah / Edit Barang
+    <div class="container my-4">
+
+        <!-- Banner Alert Terlambat (Dinamis via JS) -->
+        <div id="badgeTerlambatAlert" class="alert alert-danger shadow-sm d-none mb-4" role="alert">
+            <!-- Disuntikkan JS -->
+        </div>
+
+        <!-- 4 Kotak Ringkasan Statistik -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Ragam Alat Lab</span>
+                            <h3 class="fw-bold mb-0 mt-1" id="statTotalBarang">0</h3>
+                        </div>
+                        <div class="stat-icon blue">
+                            <i class="bi bi-laptop"></i>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <form id="formBarang">
-                            <input type="hidden" id="editIndex" value="-1">
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Kode Barang</label>
-                                <input type="text" id="kodeBarang" class="form-control" placeholder="Contoh: TKJ-RTR-01" required>
-                            </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Stok Siap Praktik</span>
+                            <h3 class="fw-bold mb-0 mt-1 text-success" id="statStokTersedia">0</h3>
+                        </div>
+                        <div class="stat-icon green">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Sedang Dipinjam</span>
+                            <h4 class="fw-bold mb-0 mt-1 text-warning" id="statSedangDipinjam">0</h4>
+                        </div>
+                        <div class="stat-icon amber">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Transaksi Selesai</span>
+                            <h4 class="fw-bold mb-0 mt-1 text-primary" id="statTotalSelesai">0</h4>
+                        </div>
+                        <div class="stat-icon purple">
+                            <i class="bi bi-journal-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Nama Barang</label>
-                                <input type="text" id="namaBarang" class="form-control" placeholder="Contoh: Router Mikrotik RB951" required>
-                            </div>
+        <!-- Tab Navigasi Utama -->
+        <div class="card card-main p-3 mb-4">
+            <ul class="nav nav-pills nav-pills-custom gap-2" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-barang-tab" data-bs-toggle="pill"
+                        data-bs-target="#pills-barang" type="button" role="tab">
+                        <i class="bi bi-cpu me-1"></i> Katalog Alat Lab RPL
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-pinjam-tab" data-bs-toggle="pill" data-bs-target="#pills-pinjam"
+                        type="button" role="tab">
+                        <i class="bi bi-file-earmark-plus me-1"></i> Peminjaman Baru
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-aktif-tab" data-bs-toggle="pill" data-bs-target="#pills-aktif"
+                        type="button" role="tab">
+                        <i class="bi bi-clock-history me-1"></i> Peminjaman Aktif
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-riwayat-tab" data-bs-toggle="pill"
+                        data-bs-target="#pills-riwayat" type="button" role="tab">
+                        <i class="bi bi-card-checklist me-1"></i> Riwayat & Laporan
+                    </button>
+                </li>
+            </ul>
+        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Kategori</label>
-                                <select id="kategoriBarang" class="form-select" required>
-                                    <option value="">-- Pilih Kategori --</option>
-                                    <option value="Perangkat Jaringan">Perangkat Jaringan (Router/Switch/AP)</option>
-                                    <option value="Komputer & Laptop">Komputer & Laptop</option>
-                                    <option value="Kabel & Konektor">Kabel & Konektor (UTP/FO/RJ45)</option>
-                                    <option value="Tools & Alat Kerja">Tools (Crimping/LAN Tester/Splicer)</option>
-                                    <option value="Komponen Hardware">Komponen Hardware (RAM/HDD/PSU)</option>
+        <!-- Konten Setiap Tab -->
+        <div class="tab-content" id="pills-tabContent">
+
+            <!-- TAB 1: DATA INVENTARIS ALAT LAB RPL -->
+            <div class="tab-pane fade show active" id="pills-barang" role="tabpanel">
+                <div class="card card-main shadow-sm">
+                    <div class="card-header-clean d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <span class="fs-5 fw-bold"><i
+                                class="bi bi-list-columns-reverse me-2 text-primary"></i>Inventaris Perangkat
+                            Laboratorium RPL</span>
+                        <button class="btn btn-primary btn-sm" onclick="bukaModalTambahBarang()">
+                            <i class="bi bi-plus-lg me-1"></i> Tambah Alat Baru
+                        </button>
+                    </div>
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="cariBarangInput" class="form-control"
+                                        placeholder="Cari nama alat, kode, spesifikasi, atau lokasi..."
+                                        oninput="renderTabelBarang()">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="filterKategoriBarang" class="form-select form-select-sm"
+                                    onchange="renderTabelBarang()">
+                                    <option value="">-- Semua Kategori Lab RPL --</option>
+                                    <option value="Desain & Multimedia">Desain & Multimedia (Tablet, VR, Proyektor)
+                                    </option>
+                                    <option value="Perangkat IoT & Embedded">Perangkat IoT & Embedded (ESP32, Arduino,
+                                        Sensor)</option>
+                                    <option value="Komputer & Laptop Lab">Komputer & Laptop Lab</option>
+                                    <option value="Periferal & Aksesoris">Periferal & Aksesoris (Monitor, Keyboard,
+                                        Tester)</option>
+                                    <option value="Jaringan & Server Lab">Jaringan & Server Lab</option>
+                                    <option value="Media Penyimpanan">Media Penyimpanan (HDD Eksternal, Flashdisk)
+                                    </option>
                                 </select>
                             </div>
-
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label class="form-label">Jumlah</label>
-                                    <input type="number" id="jumlahBarang" class="form-control" min="1" value="1" required>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label class="form-label">Kondisi</label>
-                                    <select id="kondisiBarang" class="form-select" required>
-                                        <option value="Baik">Baik</option>
-                                        <option value="Rusak Ringan">Rusak Ringan</option>
-                                        <option value="Rusak Berat">Rusak Berat</option>
-                                    </select>
-                                </div>
+                            <div class="col-md-3 text-md-end text-muted small align-self-center">
+                                *Sisa Stok berkurang otomatis jika sedang dipinjam
                             </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;">No</th>
+                                        <th>Kode</th>
+                                        <th>Nama Alat & Spesifikasi</th>
+                                        <th>Kategori</th>
+                                        <th class="text-center">Total Stok</th>
+                                        <th class="text-center">Tersedia</th>
+                                        <th>Kondisi</th>
+                                        <th>Lokasi Rak</th>
+                                        <th class="text-center" style="width: 130px;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelBarangBody">
+                                    <!-- Dimuat secara dinamis oleh JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Lokasi Penyimpanan</label>
-                                <input type="text" id="lokasiBarang" class="form-control" placeholder="Contoh: Lemari A - Rak 2" required>
-                            </div>
+            <!-- TAB 2: FORM PEMINJAMAN BARU -->
+            <div class="tab-pane fade" id="pills-pinjam" role="tabpanel">
+                <div class="card card-main shadow-sm">
+                    <div class="card-header-clean">
+                        <span class="fs-5 fw-bold"><i class="bi bi-file-earmark-plus me-2 text-primary"></i>Formulir
+                            Peminjaman Alat Laboratorium RPL</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="formPeminjamanBaru">
+                            <div class="row g-4">
+                                <!-- Bagian 1: Data Peminjam -->
+                                <div class="col-lg-6 border-end-lg pe-lg-4">
+                                    <h6 class="fw-bold text-primary mb-3">
+                                        <i class="bi bi-person-badge me-2"></i>1. Identitas Peminjam
+                                    </h6>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Nama Lengkap Siswa / Guru <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" id="pinjamNama" class="form-control"
+                                            placeholder="Contoh: Muhammad Rizky / Guru Kejuruan RPL" required>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-sm-6">
+                                            <label class="form-label fw-semibold">NIS / NIP / ID</label>
+                                            <input type="text" id="pinjamIdSiswa" class="form-control"
+                                                placeholder="Contoh: 220101">
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label fw-semibold">Kelas / Instansi <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" id="pinjamKelas" class="form-control"
+                                                placeholder="Contoh: XII RPL 1 / XI RPL 2 / Guru RPL" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">No. WhatsApp / Kontak</label>
+                                        <input type="tel" id="pinjamKontak" class="form-control"
+                                            placeholder="Contoh: 08123456789">
+                                    </div>
+                                </div>
 
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary" id="btnSimpan">
-                                    <i class="bi bi-save me-1"></i> Simpan Data
-                                </button>
-                                <button type="button" class="btn btn-secondary d-none" id="btnBatal" onclick="resetForm()">
-                                    Batal Edit
-                                </button>
+                                <!-- Bagian 2: Detail Peminjaman -->
+                                <div class="col-lg-6 ps-lg-4">
+                                    <h6 class="fw-bold text-primary mb-3">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>2. Alat Lab & Durasi Peminjaman
+                                    </h6>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Pilih Alat Lab RPL <span
+                                                class="text-danger">*</span></label>
+                                        <select id="pinjamBarangSelect" class="form-select" required>
+                                            <!-- Pilihan barang akan dimuat oleh JS -->
+                                        </select>
+                                        <div id="badgeInfoStokTersedia" class="form-text mt-1 text-muted">
+                                            Pilih alat untuk melihat stok tersedia di Lab RPL.
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-sm-6">
+                                            <label class="form-label fw-semibold">Jumlah Unit Pinjam <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" id="pinjamJumlah" class="form-control" min="1"
+                                                value="1" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label fw-semibold">Tanggal Pinjam <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="date" id="pinjamTglPinjam" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Batas Pengembalian <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" id="pinjamTglKembali" class="form-control" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold">Keperluan Praktik / Project <span
+                                                class="text-danger">*</span></label>
+                                        <textarea id="pinjamKeperluan" class="form-control" rows="2"
+                                            placeholder="Contoh: Praktik Pembuatan Mockup UI/UX UKK RPL"
+                                            required></textarea>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                            <i class="bi bi-check2-circle me-1"></i> Simpan Peminjaman & Cetak Bukti
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabel Daftar Barang -->
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <span class="fw-bold"><i class="bi bi-box-seam me-1"></i> Daftar Barang di Lab</span>
-                        <input type="text" id="cariBarang" class="form-control form-control-sm w-50" placeholder="Cari nama, kode, atau lokasi...">
+            <!-- TAB 3: PEMINJAMAN AKTIF -->
+            <div class="tab-pane fade" id="pills-aktif" role="tabpanel">
+                <div class="card card-main shadow-sm">
+                    <div class="card-header-clean d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <span class="fs-5 fw-bold"><i class="bi bi-hourglass-split me-2 text-warning"></i>Daftar
+                            Peminjaman Sedang Berjalan di Lab RPL</span>
+                        <div class="input-group input-group-sm w-auto">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="cariPeminjamanAktifInput" class="form-control"
+                                placeholder="Cari nama, transaksi, kelas..." oninput="renderTabelPeminjamanAktif()">
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-bordered align-middle">
+                            <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Kode</th>
-                                        <th>Nama Barang</th>
-                                        <th>Kategori</th>
-                                        <th>Jml</th>
-                                        <th>Kondisi</th>
-                                        <th>Lokasi</th>
-                                        <th class="text-center">Aksi</th>
+                                        <th>No. Transaksi</th>
+                                        <th>Peminjam & Kontak</th>
+                                        <th>Alat Lab & Keperluan</th>
+                                        <th class="text-center">Jumlah</th>
+                                        <th>Tgl Pinjam</th>
+                                        <th>Batas Kembali</th>
+                                        <th>Status</th>
+                                        <th class="text-center" style="width: 160px;">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabelBarang">
-                                    <!-- Data akan dimuat otomatis oleh JavaScript -->
+                                <tbody id="tabelPeminjamanAktifBody">
+                                    <!-- Dimuat dinamis oleh JS -->
                                 </tbody>
                             </table>
                         </div>
-                        <div id="pesanKosong" class="text-center text-muted my-3 d-none">
-                            Belum ada data barang tersimpan.
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: RIWAYAT & LAPORAN -->
+            <div class="tab-pane fade" id="pills-riwayat" role="tabpanel">
+                <div class="card card-main shadow-sm">
+                    <div class="card-header-clean d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <span class="fs-5 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Riwayat Seluruh
+                            Peminjaman & Pengembalian Lab RPL</span>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-success btn-sm" onclick="exportDataPeminjamanCSV()">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Ekspor CSV / Excel
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                                <i class="bi bi-printer me-1"></i> Cetak Laporan
+                            </button>
                         </div>
                     </div>
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="cariRiwayatInput" class="form-control"
+                                        placeholder="Cari peminjam, ID transaksi, alat, atau catatan..."
+                                        oninput="renderTabelRiwayat()">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="filterStatusRiwayat" class="form-select form-select-sm"
+                                    onchange="renderTabelRiwayat()">
+                                    <option value="">-- Semua Status Transaksi --</option>
+                                    <option value="Dipinjam">Sedang Dipinjam</option>
+                                    <option value="Dikembalikan">Sudah Dikembalikan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;">No</th>
+                                        <th>No. Transaksi</th>
+                                        <th>Peminjam</th>
+                                        <th>Alat Lab</th>
+                                        <th>Tgl Pinjam</th>
+                                        <th>Tgl Selesai</th>
+                                        <th>Status</th>
+                                        <th>Kondisi Kembali</th>
+                                        <th>Catatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelRiwayatBody">
+                                    <!-- Dimuat dinamis oleh JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TAMBAH / EDIT BARANG ==================== -->
+    <div class="modal fade" id="modalFormBarang" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalBarangTitle"><i class="bi bi-cpu me-2"></i>Form Alat Lab RPL</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formBarangModal">
+                    <div class="modal-body">
+                        <input type="hidden" id="barangEditId" value="">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kode Alat <span class="text-danger">*</span></label>
+                            <input type="text" id="barangKode" class="form-control" placeholder="Contoh: RPL-TAB-01"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Alat / Perangkat <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" id="barangNama" class="form-control"
+                                placeholder="Contoh: Drawing Tablet Huion Inspiroy" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kategori Lab RPL <span
+                                    class="text-danger">*</span></label>
+                            <select id="barangKategori" class="form-select" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="Desain & Multimedia">Desain & Multimedia (Tablet, VR, Proyektor)</option>
+                                <option value="Perangkat IoT & Embedded">Perangkat IoT & Embedded (ESP32, Arduino,
+                                    Sensor)</option>
+                                <option value="Komputer & Laptop Lab">Komputer & Laptop Lab (Laptop, PC Client)</option>
+                                <option value="Periferal & Aksesoris">Periferal & Aksesoris (Monitor Dual Screen,
+                                    Keyboard, Tester)</option>
+                                <option value="Jaringan & Server Lab">Jaringan & Server Lab (Switch Gigabit, Router Lab)
+                                </option>
+                                <option value="Media Penyimpanan">Media Penyimpanan (HDD Eksternal, Flashdisk)</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold">Total Unit <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" id="barangTotalStok" class="form-control" min="1" value="1"
+                                    required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold">Kondisi Alat <span
+                                        class="text-danger">*</span></label>
+                                <select id="barangKondisi" class="form-select" required>
+                                    <option value="Baik">Baik</option>
+                                    <option value="Rusak Ringan">Rusak Ringan</option>
+                                    <option value="Rusak Berat">Rusak Berat</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Lokasi Penyimpanan <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" id="barangLokasi" class="form-control"
+                                placeholder="Contoh: Lemari A - Rak 1 (Multimedia)" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Spesifikasi Singkat / Keterangan</label>
+                            <input type="text" id="barangSpesifikasi" class="form-control"
+                                placeholder="Contoh: 8192 levels pressure, battery-free stylus">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan
+                            Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PROSES PENGEMBALIAN ==================== -->
+    <div class="modal fade" id="modalPengembalian" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-arrow-return-left me-2"></i>Konfirmasi Pengembalian Alat Lab
+                        RPL</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formPengembalianModal">
+                    <div class="modal-body">
+                        <input type="hidden" id="kembaliIdTransaksi" value="">
+
+                        <div class="p-3 bg-light rounded-3 mb-3 border">
+                            <div class="small text-muted">Peminjam:</div>
+                            <div class="fw-bold fs-6" id="kembaliNamaPeminjam">-</div>
+                            <div class="small text-muted mt-2">Alat yang Dipinjam:</div>
+                            <div class="fw-bold text-primary" id="kembaliNamaBarang">-</div>
+                            <div class="small text-muted mt-1" id="kembaliTglPinjam">-</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tanggal Pengembalian Aktual <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" id="kembaliTglAktual" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kondisi Alat Saat Kembali <span
+                                    class="text-danger">*</span></label>
+                            <select id="kembaliKondisi" class="form-select" required>
+                                <option value="Baik">Baik (Lengkap & Berfungsi Normal)</option>
+                                <option value="Rusak Ringan">Rusak Ringan (Perlu Servis Minor)</option>
+                                <option value="Rusak Berat">Rusak Berat (Tidak Berfungsi)</option>
+                                <option value="Hilang">Hilang / Tidak Kembali</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Catatan Pengembalian</label>
+                            <textarea id="kembaliCatatan" class="form-control" rows="2"
+                                placeholder="Catatan kelengkapan aksesoris, kabel, dll."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle me-1"></i> Proses
+                            Selesai</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL CETAK BUKTI PINJAM RESMI LAB RPL ==================== -->
+    <div class="modal fade" id="modalBuktiPinjam" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white no-print">
+                    <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Bukti Peminjaman Alat Laboratorium RPL
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Lembar Dokumen Print Resmi -->
+                    <div class="print-area">
+                        <div class="text-center border-bottom pb-3 mb-3">
+                            <h5 class="fw-bold mb-0">SMK NEGERI 1 BERINGIN</h5>
+                            <div class="text-primary fw-bold small">LABORATORIUM REKAYASA PERANGKAT LUNAK (RPL)</div>
+                            <small class="text-secondary">SURAT BUKTI PEMINJAMAN ALAT PRAKTIK KEJURUAN RPL</small>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless small mb-0">
+                                    <tr>
+                                        <td class="text-muted" style="width: 120px;">No. Transaksi</td>
+                                        <td class="fw-bold font-monospace">: <span id="buktiNoTransaksi">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Nama Peminjam</td>
+                                        <td class="fw-semibold">: <span id="buktiNamaPeminjam">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">NIS / ID</td>
+                                        <td>: <span id="buktiNisPeminjam">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Kelas / Instansi</td>
+                                        <td>: <span id="buktiKelasPeminjam">-</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless small mb-0">
+                                    <tr>
+                                        <td class="text-muted" style="width: 120px;">Tanggal Cetak</td>
+                                        <td>: <span id="buktiTanggalCetak">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Tgl Pinjam</td>
+                                        <td>: <span id="buktiTglPinjam">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Batas Pengembalian</td>
+                                        <td class="fw-bold text-danger">: <span id="buktiTglBatas">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Kontak WhatsApp</td>
+                                        <td>: <span id="buktiKontakPeminjam">-</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="border rounded p-3 bg-light mb-3">
+                            <h6 class="fw-bold mb-2">Rincian Alat Lab RPL yang Dipinjam:</h6>
+                            <table class="table table-bordered bg-white mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nama Alat / Perangkat</th>
+                                        <th class="text-center" style="width: 100px;">Jumlah</th>
+                                        <th>Keperluan Praktik</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold" id="buktiNamaBarang">-</td>
+                                        <td class="text-center" id="buktiJumlahBarang">-</td>
+                                        <td id="buktiKeperluan">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="small text-muted mb-4">
+                            <em>*Peminjam bertanggung jawab penuh atas keutuhan, kebersihan, dan keamanan alat Lab RPL
+                                hingga diserahkan kembali kepada laboran / petugas.</em>
+                        </div>
+
+                        <div class="row text-center mt-4">
+                            <div class="col-6">
+                                <div class="small text-muted mb-5">Peminjam,</div>
+                                <div class="fw-bold text-decoration-underline" id="buktiTtdPeminjam">(
+                                    ........................................ )</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted mb-5">Petugas Lab RPL,</div>
+                                <div class="fw-bold text-decoration-underline">( Petugas Lab RPL )</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light no-print">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="cetakBuktiSekarang()">
+                        <i class="bi bi-printer me-1"></i> Cetak Dokumen / Simpan PDF
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Menghubungkan ke file JavaScript -->
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Application JS -->
     <script src="script.js"></script>
 </body>
+
 </html>
